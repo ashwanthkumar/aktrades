@@ -2,20 +2,21 @@ package in.ashwanthkumar.aktrades;
 
 
 import in.ashwanthkumar.aktrades.model.Order;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Queue;
 
-public class IntraDayOrderStateMachine {
-
-    private Queue<LocalTime> ticks;
-    private Strategy strategy;
-    private Queue<Order> openOrders;
+@RequiredArgsConstructor
+public class BacktestEngine {
+    private final List<LocalTime> ticks;
+    private final Strategy strategy;
+    private final Context context;
+    private final Queue<Order> openOrders;
 
     public void execute() {
-        while (!ticks.isEmpty()) {
-            LocalTime tick = ticks.poll();
+        for (LocalTime tick : ticks) {
             // Check for open orders that we need to execute
             executeOpenOrders();
 
