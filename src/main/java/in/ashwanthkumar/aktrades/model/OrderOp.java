@@ -1,4 +1,4 @@
-package in.ashwanthkumar.aktrades;
+package in.ashwanthkumar.aktrades.model;
 
 public enum OrderOp {
     BUY,

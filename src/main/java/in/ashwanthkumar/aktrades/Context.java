@@ -5,5 +5,5 @@ package in.ashwanthkumar.aktrades;
 //   - past order history (only for intra day)
 //   - Any custom configurations or metadata that was passed
 //   - View (and edit?) triggers during the live strategy
-public class StrategyContext {
+public class Context {
 }

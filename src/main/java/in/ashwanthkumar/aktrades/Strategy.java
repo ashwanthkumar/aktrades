@@ -1,5 +1,7 @@
 package in.ashwanthkumar.aktrades;
 
+import in.ashwanthkumar.aktrades.model.Order;
+
 import java.util.List;
 
 public interface Strategy {
@@ -10,7 +12,7 @@ public interface Strategy {
      * @param context Context object to query runtime info
      * @return Orders that are enqueued to the order book. The order is executed only on the next tick.
      */
-    List<Order> onTick(Scrip scrip, StrategyContext context);
+    List<Order> onTick(Scrip scrip, Context context);
 
     /**
      * Invoked after each order execution, this would be called for each order that is ful-filled
@@ -24,5 +26,5 @@ public interface Strategy {
      * @param context Context object to query runtime info
      * @return Orders that are enqueued to the order book. The order is executed only on the next tick.
      */
-    List<Order> afterOrder(Order order, StrategyContext context);
+    List<Order> afterOrder(Order order, Context context);
 }

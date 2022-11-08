@@ -1,4 +1,4 @@
-package in.ashwanthkumar.aktrades;
+package in.ashwanthkumar.aktrades.model;
 
 public enum OrderType {
     // Market Order, we'll fulfil at the order at LTP (Last Traded Price)

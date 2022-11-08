@@ -1,4 +1,4 @@
-package in.ashwanthkumar.aktrades;
+package in.ashwanthkumar.aktrades.model;
 
 /**
  * Represents each item in the Order Book
