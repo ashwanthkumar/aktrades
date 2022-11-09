@@ -2,18 +2,10 @@ package in.ashwanthkumar.aktrades.io;
 
 import in.ashwanthkumar.aktrades.plugins.TableTransformation;
 import in.ashwanthkumar.aktrades.plugins.TelegramNfBnfTransformation;
-import org.apache.commons.lang3.StringUtils;
-import tech.tablesaw.api.DateTimeColumn;
-import tech.tablesaw.api.StringColumn;
 import tech.tablesaw.api.Table;
-import tech.tablesaw.selection.Selection;
 
 import java.io.File;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 public class DataImporter {
     // We shouldn't be doing any changes to the table ideally after the initial data transformation
@@ -42,7 +34,6 @@ public class DataImporter {
 
         // we use dictionary to encode these less cardinality columns to save space.
         Set<String> categoricalColumns = Set.of("Ticker", "Day");
-
         // Write the data to disk
         new DataWriter(table, new File("output-foo.bin")).write(categoricalColumns);
 
