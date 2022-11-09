@@ -41,7 +41,7 @@ public class DataReader {
                 List<Field> fields = vectorSchemaRoot.getSchema().getFields();
                 for (Field field : fields) {
                     FieldVector fieldVector = vectorSchemaRoot.getVector(field);
-                    log.debug(field.getName() + " has " + fieldVector.getValueCount() + " elements of type: " + field.getFieldType().getType().getTypeID());
+                    System.out.println(field.getName() + " has " + fieldVector.getValueCount() + " elements of type: " + field.getFieldType().getType().getTypeID());
                     // does the field use a dict based encoding?
                     DictionaryEncoding dictEncoding = field.getDictionary();
                     if (dictEncoding != null) {
@@ -53,6 +53,12 @@ public class DataReader {
                         }
                     } else {
                         switch (field.getFieldType().getType().getTypeID()) {
+                            case Utf8:
+                                columns.add(
+                                        parseColumn(fieldVector, field, StringColumn::create, value -> ((Text)value).toString())
+                                );
+                                break;
+
                             case FloatingPoint:
                                 columns.add(
                                         parseColumn(fieldVector, field, DoubleColumn::create, value -> truncateDecimal(((Float) value).doubleValue(), 2))
