@@ -6,7 +6,6 @@ import org.apache.arrow.vector.*;
 import org.apache.arrow.vector.dictionary.Dictionary;
 import org.apache.arrow.vector.dictionary.DictionaryEncoder;
 import org.apache.arrow.vector.dictionary.DictionaryProvider;
-import org.apache.arrow.vector.holders.NullableFloat4Holder;
 import org.apache.arrow.vector.ipc.ArrowFileWriter;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.DictionaryEncoding;
@@ -32,15 +31,14 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class DataImporter {
-    public static final String NA = "N/A";
-
     // We shouldn't be doing any changes to the table ideally after the initial data transformation
     // even if we do, this should be treated as immutable, but some internal implementations aren't
     // immutable like removeColumns, addColumns, etc.
     private final Table table;
 
     public DataImporter(Table table, Function<Table, Table> dataTransformation) {
-        this.table = dataTransformation.apply(table);
+        // we store a copy in our reference so we're not affected by any lingering dataTransformation copies held elsewhere
+        this.table = dataTransformation.apply(table).copy();
     }
 
     public static DataImporter fromCsv(String path, Function<Table, Table> dataTransformation) {
@@ -56,16 +54,17 @@ public class DataImporter {
         DataImporter dataImporter = DataImporter.fromCsv("/Users/ashwanthkumar/trading/data/28_OCT_03_NOV_WEEKLY_expiry_data_VEGE_NF_AND_BNF_Options_Vege.csv", t -> {
             System.out.println(t.summary());
 
-            // Step 1: Parse the Date/Time as LocalDateTime and remove rows that don't make sense
+            // Step 1: Parse the Date/Time as LocalDateTime
             StringColumn dateTimeCol = t.column("Date/Time").asStringColumn();
             DateTimeColumn parsedDateTime = dateTimeCol
                     .mapInto(input -> LocalDateTime.parse(input, DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")), DateTimeColumn.create("Time", dateTimeCol.size()));
             t.addColumns(parsedDateTime);
             t.removeColumns("Date/Time");
-            Predicate<LocalDateTime> withinFnOTimeRange = localDateTime -> localDateTime.getHour() < 15 || (localDateTime.getHour() == 15 && localDateTime.getMinute() <= 29);
-            Selection filterRowsBeyondFnOClose = parsedDateTime.eval(withinFnOTimeRange);
 
-            // Step 2: Keep only the required tickers for now: NF and BNF
+            // Step 2: Keep only the required rows:
+            Predicate<LocalDateTime> withinFnOTimeRange = localDateTime -> localDateTime.getHour() < 15 || (localDateTime.getHour() == 15 && localDateTime.getMinute() <= 29);
+            Selection activeTradingHours = parsedDateTime.eval(withinFnOTimeRange);
+
             StringColumn tickerCol = t.column("Ticker").asStringColumn();
             Predicate<String> isNfOrBnf = ticker -> {
                 Set<String> bnfIndex = Set.of("BANKNIFTY", "BANKNIFTY-FUT");
@@ -74,10 +73,10 @@ public class DataImporter {
                 return nfIndex.contains(ticker) || StringUtils.startsWith(ticker, "NIFTYWK") ||
                         bnfIndex.contains(ticker) || StringUtils.startsWith(ticker, "BANKNIFTYWK");
             };
-            Selection keepOnlyNfAndBnf = tickerCol.eval(isNfOrBnf);
+            Selection onlyNfAndBnf = tickerCol.eval(isNfOrBnf);
 
             // return a subset of table that matches all the required selections
-            return t.where(keepOnlyNfAndBnf.and(filterRowsBeyondFnOClose));
+            return t.where(onlyNfAndBnf.and(activeTradingHours));
         });
         Table table = dataImporter.getTable();
         System.out.println(table.summary());
