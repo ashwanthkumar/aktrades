@@ -1,6 +1,7 @@
 package in.ashwanthkumar.aktrades.io;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
 import org.apache.arrow.vector.*;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
+@Slf4j
 public class DataWriter {
     private final Table table;
     private final File output;
@@ -138,7 +140,8 @@ public class DataWriter {
                 writer.start();
                 writer.writeBatch();
                 writer.end();
-                System.out.println("Bytes written: " + writer.bytesWritten());
+                log.debug("Bytes written: " + writer.bytesWritten());
+                log.debug("Rows written: " + root.getRowCount());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
