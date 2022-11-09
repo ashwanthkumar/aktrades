@@ -67,7 +67,12 @@ public class DataImporter {
         // we use dictionary to encode these less cardinality columns to save space.
         Set<String> categoricalColumns = Set.of("Ticker");
 
+        // Write the data to disk
         new DataWriter(table, new File("output-foo.bin")).write(categoricalColumns);
+
+        // read the data from disk
+        Table read = new DataReader(new File("output-foo.bin")).read();
+        System.out.println(read.summary());
 
 
 //        DoubleColumn closeCol = (DoubleColumn) table.column("Close");

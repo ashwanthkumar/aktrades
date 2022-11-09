@@ -51,6 +51,8 @@ public class DataWriter {
             DictionaryProvider.MapDictionaryProvider dictProvider = new DictionaryProvider.MapDictionaryProvider();
             List<FieldVector> valueVectors = new ArrayList<>();
 
+            // TODO: Should we write the categoricalColumns as well in the output? so we can use that information
+            //   while reading automatically instead of asking for it during both read and write?
             for (Column<?> column : table.columns()) {
                 if (ColumnType.valueOf(column.type().name()).equals(ColumnType.DOUBLE)) {
                     Float4Vector arrowColumn = new Float4Vector(column.name(), allocator);
@@ -131,6 +133,7 @@ public class DataWriter {
                     arrowColumn.setValueCount(column.size());
                     valueVectors.add(arrowColumn);
                 }
+                // TODO: Add more types as we have a need for them.
             }
 
             List<Field> fields = valueVectors.stream().map(ValueVector::getField).collect(Collectors.toList());
