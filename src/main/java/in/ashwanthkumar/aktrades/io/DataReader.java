@@ -74,6 +74,11 @@ public class DataReader {
                                         parseColumn(fieldVector, field, DateTimeColumn::create, Function.identity())
                                 );
                                 break;
+                            case Bool:
+                                columns.add(
+                                        parseColumn(fieldVector, field, BooleanColumn::create, Function.identity())
+                                );
+                                break;
                         }
                     }
                 }

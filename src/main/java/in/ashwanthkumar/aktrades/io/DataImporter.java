@@ -28,10 +28,9 @@ public class DataImporter {
     }
 
     public static void main(String[] args) {
+
         DataImporter dataImporter = DataImporter.fromCsv("/Users/ashwanthkumar/trading/data/28_OCT_03_NOV_WEEKLY_expiry_data_VEGE_NF_AND_BNF_Options_Vege.csv", new TelegramNfBnfTransformation());
         Table table = dataImporter.getTable();
-        System.out.println(table.summary());
-
         // we use dictionary to encode these less cardinality columns to save space.
         Set<String> categoricalColumns = Set.of("Ticker", "Day");
         // Write the data to disk

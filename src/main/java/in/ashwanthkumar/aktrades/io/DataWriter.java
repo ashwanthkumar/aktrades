@@ -132,6 +132,19 @@ public class DataWriter {
                     }
                     arrowColumn.setValueCount(column.size());
                     valueVectors.add(arrowColumn);
+                } else if(ColumnType.valueOf(column.type().name()).equals(ColumnType.BOOLEAN)) {
+                    BitVector arrowColumn = new BitVector(column.name(), allocator);
+                    arrowColumn.allocateNew(column.size());
+                    for (int i = 0; i < column.size(); i++) {
+                        Boolean row = (Boolean) column.get(i);
+                        if (row == null || !row) {
+                            arrowColumn.setNull(i);
+                        } else {
+                            arrowColumn.set(i, 1);
+                        }
+                    }
+                    arrowColumn.setValueCount(column.size());
+                    valueVectors.add(arrowColumn);
                 }
                 // TODO: Add more types as we have a need for them.
             }
