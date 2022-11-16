@@ -1,12 +1,17 @@
 package in.ashwanthkumar.aktrades.io;
 
+import com.google.common.base.Preconditions;
 import in.ashwanthkumar.aktrades.plugins.TableTransformation;
 import in.ashwanthkumar.aktrades.plugins.TelegramNfBnfTransformation;
+import lombok.extern.slf4j.Slf4j;
 import tech.tablesaw.api.Table;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
+@Slf4j
 public class DataImporter {
     // We shouldn't be doing any changes to the table ideally after the initial data transformation
     // even if we do, this should be treated as immutable, but some internal implementations aren't
@@ -27,33 +32,35 @@ public class DataImporter {
         return table;
     }
 
+    // Bulk import all the CSV files into our storage.
     public static void main(String[] args) {
+        String baseDir = "/Users/ashwanthkumar/trading/data/";
+        File[] csvFilesToImport = new File(baseDir).listFiles((dir, name) -> name.endsWith(".csv"));
+        Objects.requireNonNull(csvFilesToImport, "We should have CSV Files to import");
+        Preconditions.checkState(csvFilesToImport.length > 1, "CSV File seems to be empty");
+        File outputFile = new File(String.format("output/%s.bin", UUID.randomUUID().toString()));
+        Table tableSoFar = null;
+        for (File file : csvFilesToImport) {
+            log.info("Loading the file {}", file.getAbsolutePath());
+            DataImporter dataImporter = DataImporter.fromCsv(file.getAbsolutePath(), new TelegramNfBnfTransformation());
+            Table table = dataImporter.getTable();
+            if (tableSoFar == null) {
+                tableSoFar = table;
+            } else {
+                // Note: Use append instead of concat, because concat appends only the columns and not rows.
+                tableSoFar = tableSoFar.append(table);
+            }
+        }
 
-        DataImporter dataImporter = DataImporter.fromCsv("/Users/ashwanthkumar/trading/data/28_OCT_03_NOV_WEEKLY_expiry_data_VEGE_NF_AND_BNF_Options_Vege.csv", new TelegramNfBnfTransformation());
-        Table table = dataImporter.getTable();
         // we use dictionary to encode these less cardinality columns to save space.
         Set<String> categoricalColumns = Set.of("Ticker", "Day");
-        // Write the data to disk
-        new DataWriter(table, new File("output-foo.bin")).write(categoricalColumns);
+        // create the output directory if not exists
+        outputFile.getParentFile().mkdirs();
 
-        // read the data from disk
-        Table read = new DataReader(new File("output-foo.bin")).read();
-        System.out.println(read.summary());
-
-
-//        DoubleColumn closeCol = (DoubleColumn) table.column("Close");
-//
-//        DateTimeColumn dt = (DateTimeColumn) table.column("dt");
-//        DateColumn dates = dt.map(LocalDateTime::toLocalDate, DateColumn::create).unique().sorted(Comparator.naturalOrder());
-//        // Running for each day
-//        for (LocalDate date : dates) {
-//            Selection dateSelection = dt.isEqualTo(date.atStartOfDay());
-//            TimeColumn timeTicksDuringTheDay = dt.where(dateSelection).map(t -> LocalTime.of(t.getHour(), t.getMinute(), t.getSecond()), TimeColumn::create).unique().sorted(Comparator.naturalOrder());
-//
-//            for (LocalTime time : timeTicksDuringTheDay) {
-//                Selection rowSelection = dt.isEqualTo(date.atTime(time));
-//                // TODO: Implement the strategy execution
-//            }
-//        }
+        new DataWriter(tableSoFar, outputFile).write(categoricalColumns);
     }
+
+    // read the data from disk
+    //        Table read = new DataReader(new File("output-foo.bin")).read();
+    //        System.out.println(read.summary());
 }
